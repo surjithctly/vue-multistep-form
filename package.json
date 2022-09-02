@@ -1,0 +1,17 @@
+{
+  "name": "tailwindcss-starter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx copyfiles -u 1 'src/**/*' dist && npx copyfiles 'img/**/*' dist && npx tailwindcss -i ./styles/tailwind.css -o ./dist/assets/main.css",
+    "dev": "npx tailwindcss -i ./styles/tailwind.css -o ./assets/main.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tailwindcss": "^3.1.8"
+  },
+  "devDependencies": {}
+}
