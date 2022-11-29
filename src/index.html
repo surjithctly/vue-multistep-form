@@ -7,10 +7,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tailwind CSS Starter</title>
     <link href="/assets/main.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <h1 class="text-green-500 text-2xl">Tailwind CSS Starter</h1>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="hidden w-full max-w-screen-md px-5" id="multistep-form" v-scope
+            @vue:mounted="$el.classList.remove('hidden')">
+            <div class="flex flex-col items-center max-w-3xl text-center" v-if="!formstarted">
+                <h1 class="text-3xl font-bold text-indigo-800">Typeform like Multistep Forms</h1>
+                <p class="mt-3 text-lg text-neutral-500">Did you ever need a multi-step form which looks like Typeform
+                    but
+                    needed
+                    full
+                    control over your form?
+                    You've reached the right place. This example is built with Vue, Tailwind CSS. Form Submissions are
+                    powered by Web3Forms for receiving emails. </p>
+                <div class="flex items-center gap-2 mt-5">
+                    <button @click="startForm"
+                        class="px-4 py-3 text-xl font-bold text-white transition-colors bg-black rounded-md shadow hover:bg-neutral-800">Start</button>
+                    <!-- <span class="text-sm text-neutral-700">
+                        press <span class="font-medium">Enter ↵</span></span> -->
+                </div>
+            </div>
+
+            <div v-if="formstarted" class="">
+                <form class="p-10" @submit.prevent="">
+                    <!--Step Indicators-->
+                    <div v-scope="StepsIndicatorComponent({ stepsCount: totalSteps })"></div>
+
+                    <div v-if="!submitted">
+                        <div v-for="(fieldKeys, step) in steps">
+                            <div v-if="currentStep === step">
+                                <div v-for="(field, index) in fieldKeys" v-scope="FieldComponent({
+                  field: fields[field],
+                  isInvalid:()=> !!invalids[field],
+                  invalidMessage: () => invalids[field],
+                  validate: ()=> validateField(field)
+                })"></div>
+                            </div>
+                        </div>
+
+                        <!--Form Footer (Buttons)-->
+                        <footer class="flex flex-row-reverse justify-start gap-2 mt-5">
+                            <button v-if="isLastStep" class="btn btn-primary" @click="submit">
+                                Submit
+                            </button>
+                            <button v-if="!isLastStep" class="btn btn-primary" @click="nextStep">
+                                Next
+                            </button>
+                            <button v-if="!isFirstStep" class="btn" @click="previousStep">
+                                Previous
+                            </button>
+                        </footer>
+                    </div>
+
+                    <!--Success Page-->
+                    <div v-else>
+                        <h3 class="p-5 text-lg">
+                            Hey {{fields.name.value}}, thanks for donating!
+                        </h3>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./app.js"></script>
+
+    <!--Steps Indicator Component Template-->
+    <template id="step-indicator-component-template">
+        <!--Step Indicators-->
+        <div class="flex items-stretch gap-2">
+            <div v-for="step in stepsCountWithSuccessPage" class="w-full h-2 text-purple-500 rounded"
+                style="border: 1px solid;" :class="{'bg-purple-500 ': step - 1 <= currentStep || submitted}"></div>
+        </div>
+    </template>
+
+    <!--Field Component Template-->
+    <template id="field-component-template">
+        <!--Form Field-->
+        <div class="relative">
+            <div class="">
+                <label class="label">
+                    <span> {{field.label}}</span> <span>*</span></label>
+                <input class="w-full " type="text" v-model="field.value" :class="{'input-error' : isInvalid}"
+                    @input="validate" />
+
+            </div>
+            <div v-if="isInvalid" class="absolute right-0 pr-5 text-sm text-right text-error" style="bottom: -7px;">
+                {{invalidMessage}}
+            </div>
+        </div>
+    </template>
 </body>
 
 </html>
