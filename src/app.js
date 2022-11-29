@@ -7,6 +7,7 @@ function FieldComponent(props) {
   return {
     $template: "#field-component-template",
     field: props.field,
+    fieldNum: props.index + 1,
     get isInvalid() {
       return props.isInvalid();
     },
@@ -38,13 +39,14 @@ createApp({
   FieldComponent,
 
   // Data
-  formstarted: true,
+  formstarted: false,
   currentStep: 0,
   submitted: false,
   invalids: {},
   fields: {
     name: {
       label: "What's your full name?",
+      helptext: "Howdy Stranger, Let's get acquainted. ",
       value: "",
       validations: [
         {
@@ -133,12 +135,12 @@ createApp({
   },
   steps: [
     ["name"],
-    // ["email"],
-    // ["address"],
-    // ["city"],
-    // ["state"],
-    // ["zip"],
-    // ["referral"],
+    ["email"],
+    ["address"],
+    ["city"],
+    ["state"],
+    ["zip"],
+    ["referral"],
     ["donationAmount"],
   ],
 

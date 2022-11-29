@@ -36,19 +36,38 @@
             <div v-if="formstarted" class="">
                 <form class="p-10" @submit.prevent="">
                     <!--Step Indicators-->
-                    <div v-scope="StepsIndicatorComponent({ stepsCount: totalSteps })"></div>
+                    <!-- <div v-scope="StepsIndicatorComponent({ stepsCount: totalSteps })"></div> -->
 
                     <div v-if="!submitted">
                         <div v-for="(fieldKeys, step) in steps">
                             <div v-if="currentStep === step">
                                 <div v-for="(field, index) in fieldKeys" v-scope="FieldComponent({
                   field: fields[field],
+                  index: index,
                   isInvalid:()=> !!invalids[field],
                   invalidMessage: () => invalids[field],
                   validate: ()=> validateField(field)
                 })"></div>
                             </div>
                         </div>
+                        <div class="flex items-center gap-2 mt-5">
+                            <button v-if="!isLastStep"
+                                class="flex items-center gap-2 px-4 py-2 text-xl font-medium text-white transition-colors bg-black rounded-md shadow hover:bg-neutral-800"
+                                @click="nextStep">
+                                <span>OK</span> <svg height="13" width="16" fill="white">
+                                    <path d="M14.293.293l1.414 1.414L5 12.414.293 7.707l1.414-1.414L5 9.586z"></path>
+                                </svg>
+                            </button>
+                            <button v-if="isLastStep"
+                                class="flex items-center gap-2 px-4 py-2 text-xl font-medium text-white transition-colors bg-black rounded-md shadow hover:bg-neutral-800"
+                                @click="submit">
+                                Submit
+                            </button>
+                            <span class="text-sm text-neutral-500">
+                                press <span class="font-medium text-neutral-700">Enter ↵</span></span>
+                        </div>
+
+
 
                         <!--Form Footer (Buttons)-->
                         <footer class="flex flex-row-reverse justify-start gap-2 mt-5">
@@ -67,7 +86,8 @@
                     <!--Success Page-->
                     <div v-else>
                         <h3 class="p-5 text-lg">
-                            Hey {{fields.name.value}}, thanks for donating!
+                            Hey <strong>{{fields.name.value}}</strong>, thanks for donating
+                            {{fields.donationAmount.value}} for charity !
                         </h3>
                     </div>
                 </form>
@@ -89,14 +109,31 @@
     <template id="field-component-template">
         <!--Form Field-->
         <div class="relative">
-            <div class="">
-                <label class="label">
-                    <span> {{field.label}}</span> <span>*</span></label>
-                <input class="w-full " type="text" v-model="field.value" :class="{'input-error' : isInvalid}"
-                    @input="validate" />
+            <div class="relative">
+                <div class="absolute flex items-center gap-1 text-indigo-800 top-1 -left-8">
+                    <span> {{fieldNum}}</span>
+                    <svg height="10" width="11" fill="currentColor">
+                        <path d="M7.586 5L4.293 1.707 5.707.293 10.414 5 5.707 9.707 4.293 8.293z">
+                        </path>
+                        <path d="M8 4v2H0V4z"></path>
+                    </svg>
+                </div>
+                <label class="text-xl font-medium text-indigo-800">
+                    <span>{{field.label}}</span> <span>*</span></label>
+                <div v-if="field.helptext" class="mt-1 text-lg text-neutral-500"><span>{{field.helptext}}</span></div>
+                <input
+                    class="w-full px-0 mt-3 text-xl font-normal border-0 border-b-2 border-neutral-400 focus:border-black focus:outline-none focus:ring-0 placeholder:text-neutral-300"
+                    type="text" placeholder="Type your answer here.." v-model="field.value"
+                    :class="{'input-error' : isInvalid}" @input="validate" />
 
             </div>
-            <div v-if="isInvalid" class="absolute right-0 pr-5 text-sm text-right text-error" style="bottom: -7px;">
+            <div v-if="isInvalid"
+                class="inline-flex items-center px-2 py-px mt-3 text-sm text-red-600 bg-red-100 rounded">
+                <svg height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
+                    <path clip-rule="evenodd"
+                        d="M16.3361 17.9998L7.00279 18C5.49294 18 4.52754 16.391 5.23806 15.0588L9.90471 6.30882C10.6576 4.89706 12.6812 4.89706 13.4341 6.30881L18.1008 15.0586C18.8113 16.3908 17.8459 17.9998 16.3361 17.9998ZM11.6694 8.50003C12.2217 8.50003 12.6694 8.94774 12.6694 9.50003V11.5C12.6694 12.0523 12.2217 12.5 11.6694 12.5C11.1171 12.5 10.6694 12.0523 10.6694 11.5V9.50003C10.6694 8.94774 11.1171 8.50003 11.6694 8.50003ZM11.6694 16C12.2217 16 12.6694 15.5523 12.6694 15C12.6694 14.4477 12.2217 14 11.6694 14C11.1171 14 10.6694 14.4477 10.6694 15C10.6694 15.5523 11.1171 16 11.6694 16Z"
+                        fill-rule="evenodd"></path>
+                </svg>
                 {{invalidMessage}}
             </div>
         </div>
