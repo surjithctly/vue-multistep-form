@@ -2,22 +2,34 @@ import {
   createApp,
   nextTick,
 } from "https://unpkg.com/petite-vue?module";
+// import { transition } from "https://unpkg.com/vue-petite-transition@2.0.0/dist/vue-petite-transition.es.js";
 
 function FieldComponent(props) {
   return {
     $template: "#field-component-template",
     field: props.field,
-    fieldNum: props.index + 1,
+    fieldNum: props.currentStep + props.index + 1,
+
     get isInvalid() {
       return props.isInvalid();
     },
     get invalidMessage() {
       return props.invalidMessage();
     },
+    get nextStep() {
+      nextTick(() => {
+        this.$refs.InputFields?.focus();
+        // this.focusElem(this.$refs.InputFields);
+        //this.$refs.InputFields.setAttribute("autofocus", "true");
+        // this.invalids = {};
+      });
+    },
     // methods
     validate() {
       nextTick(() => {
-        if (this.isInvalid) props.validate();
+        if (this.isInvalid) {
+          props.validate();
+        }
       });
     },
   };
@@ -42,6 +54,9 @@ createApp({
   formstarted: false,
   currentStep: 0,
   submitted: false,
+  submitSuccess: false,
+  submitError: false,
+  formAccessKey: "YOUR_ACCESS_KEY_HERE",
   invalids: {},
   fields: {
     name: {
@@ -57,6 +72,7 @@ createApp({
     },
     email: {
       label: "Email",
+      helptext: "Thank you, now provide your email to contact you. ",
       value: "",
       validations: [
         {
@@ -72,6 +88,16 @@ createApp({
     referral: {
       label: "How did you find us?",
       value: "",
+      type: "select",
+      name: "referral",
+      options: [
+        "Google",
+        "Social Media",
+        "Website or Blog",
+        "Friends",
+        "Other",
+      ],
+      optional: true,
       validations: [],
     },
     address: {
@@ -134,12 +160,12 @@ createApp({
     },
   },
   steps: [
-    ["name"],
-    ["email"],
-    ["address"],
-    ["city"],
-    ["state"],
-    ["zip"],
+    // ["name"],
+    // ["email"],
+    // ["address"],
+    // ["city"],
+    // ["state"],
+    // ["zip"],
     ["referral"],
     ["donationAmount"],
   ],
@@ -159,7 +185,7 @@ createApp({
   },
 
   startForm() {
-    this.formstarted = true;
+    return (this.formstarted = true);
   },
 
   // Methods
@@ -172,12 +198,14 @@ createApp({
   nextStep() {
     if (this.isLastStep) return;
     this.validate();
+    //console.log(this);
     if (this.isInvalid) return;
     this.currentStep++;
   },
   get isInvalid() {
     return !!Object.values(this.invalids).filter((key) => key).length;
   },
+
   // methods
   validate() {
     this.invalids = {};
@@ -196,28 +224,62 @@ createApp({
       }
     });
   },
-
-  submit() {
+  listenEnterKey() {
+    window.addEventListener("keydown", (e) => {
+      if (e.key == "Enter") {
+        e.preventDefault();
+        if (!this.formstarted) {
+          this.formstarted = true;
+        } else if (!this.isLastStep && !this.isInvalid) {
+          return this.nextStep();
+        } else {
+          return this.submit();
+        }
+      }
+    });
+  },
+  async submit() {
     // if form not valid don't submit
     this.validate();
     if (this.isInvalid) return;
-
+    this.submitted = true;
     const formData = this.fields;
-    const object = {};
+    const object = {
+      access_key: this.formAccessKey,
+      subject: "New submission from multistep form",
+    };
     for (const key in formData) {
       object[key] = formData[key].value;
     }
-    console.log("doing submit", object);
+    console.log("Submitting form..", object);
+
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(object),
+    });
+    const result = await response.json();
+
+    if (result.success) {
+      console.log(result);
+      // submit on valid form
+      this.submitSuccess = true;
+    } else {
+      console.log(result);
+      this.submitError = true;
+    }
 
     // this will also work.
     // for (let [key, value] of Object.entries(formData)) {
     //   console.log(key, value.value);
     // }
-
-    // submit on valid form
-    this.submitted = true;
   },
-}).mount("#multistep-form");
+})
+  // .directive("transition", transition)
+  .mount("#multistep-form");
 
 function validateEmail(email) {
   const re =

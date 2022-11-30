@@ -15,7 +15,7 @@
 <body>
     <div class="flex items-center justify-center min-h-screen">
         <div class="hidden w-full max-w-screen-md px-5" id="multistep-form" v-scope
-            @vue:mounted="$el.classList.remove('hidden')">
+            @vue:mounted="listenEnterKey(), $el.classList.remove('hidden')">
             <div class="flex flex-col items-center max-w-3xl text-center" v-if="!formstarted">
                 <h1 class="text-3xl font-bold text-indigo-800">Typeform like Multistep Forms</h1>
                 <p class="mt-3 text-lg text-neutral-500">Did you ever need a multi-step form which looks like Typeform
@@ -28,8 +28,8 @@
                 <div class="flex items-center gap-2 mt-5">
                     <button @click="startForm"
                         class="px-4 py-3 text-xl font-bold text-white transition-colors bg-black rounded-md shadow hover:bg-neutral-800">Start</button>
-                    <!-- <span class="text-sm text-neutral-700">
-                        press <span class="font-medium">Enter ↵</span></span> -->
+                    <span class="text-sm text-neutral-500">
+                        press <span class="font-medium text-neutral-700">Enter ↵</span></span>
                 </div>
             </div>
 
@@ -38,15 +38,16 @@
                     <!--Step Indicators-->
                     <!-- <div v-scope="StepsIndicatorComponent({ stepsCount: totalSteps })"></div> -->
 
-                    <div v-if="!submitted">
+                    <div v-if="!submitSuccess && !submitError">
                         <div v-for="(fieldKeys, step) in steps">
                             <div v-if="currentStep === step">
                                 <div v-for="(field, index) in fieldKeys" v-scope="FieldComponent({
                   field: fields[field],
                   index: index,
+                  currentStep: currentStep,
                   isInvalid:()=> !!invalids[field],
                   invalidMessage: () => invalids[field],
-                  validate: ()=> validateField(field)
+                  validate: ()=> validateField(field),
                 })"></div>
                             </div>
                         </div>
@@ -61,7 +62,8 @@
                             <button v-if="isLastStep"
                                 class="flex items-center gap-2 px-4 py-2 text-xl font-medium text-white transition-colors bg-black rounded-md shadow hover:bg-neutral-800"
                                 @click="submit">
-                                Submit
+                                <span v-if="!submitted">Submit</span>
+                                <span v-else>Submitting..</span>
                             </button>
                             <span class="text-sm text-neutral-500">
                                 press <span class="font-medium text-neutral-700">Enter ↵</span></span>
@@ -70,24 +72,37 @@
 
 
                         <!--Form Footer (Buttons)-->
-                        <footer class="flex flex-row-reverse justify-start gap-2 mt-5">
-                            <button v-if="isLastStep" class="btn btn-primary" @click="submit">
-                                Submit
+                        <footer class="fixed bottom-0 right-0 flex flex-row-reverse justify-start px-10 py-5">
+
+                            <button :disabled="isLastStep"
+                                class="px-3 py-3 text-white border-l rounded rounded-l-none bg-neutral-900 border-neutral-600 disabled:text-neutral-500"
+                                @click="nextStep">
+                                <svg height="9" width="14" fill="currentColor">
+                                    <path d="M12.293.293l1.414 1.414L7 8.414.293 1.707 1.707.293 7 5.586z"></path>
+                                </svg>
                             </button>
-                            <button v-if="!isLastStep" class="btn btn-primary" @click="nextStep">
-                                Next
-                            </button>
-                            <button v-if="!isFirstStep" class="btn" @click="previousStep">
-                                Previous
+                            <button :disabled="isFirstStep"
+                                class="px-3 py-3 text-white rounded rounded-r-none bg-neutral-900 disabled:text-neutral-500"
+                                @click="previousStep">
+                                <svg height="9" width="14" fill="currentColor">
+                                    <path d="M11.996 8.121l1.414-1.414L6.705 0 0 6.707l1.414 1.414 5.291-5.293z"></path>
+                                </svg>
                             </button>
                         </footer>
                     </div>
 
                     <!--Success Page-->
-                    <div v-else>
-                        <h3 class="p-5 text-lg">
+                    <div v-if="submitted && submitSuccess">
+                        <h3 class="p-5 text-lg text-center">
                             Hey <strong>{{fields.name.value}}</strong>, thanks for donating
                             {{fields.donationAmount.value}} for charity !
+                        </h3>
+                    </div>
+
+                    <!--Error Page-->
+                    <div v-if="submitted && submitError">
+                        <h3 class="p-5 text-lg text-center">
+                            Sorry <strong>{{fields.name.value}}</strong>, Something went wrong. Try again later
                         </h3>
                     </div>
                 </form>
@@ -119,12 +134,34 @@
                     </svg>
                 </div>
                 <label class="text-xl font-medium text-indigo-800">
-                    <span>{{field.label}}</span> <span>*</span></label>
+                    <span>{{field.label}}</span>
+                    <!-- <span v-if="field.optional" class="text-neutral-400">Optional</span> -->
+                    <span v-if="!field.optional">*</span></label>
                 <div v-if="field.helptext" class="mt-1 text-lg text-neutral-500"><span>{{field.helptext}}</span></div>
-                <input
+                <div v-if="field.type === 'select'">
+                    <div class="inline-flex flex-col items-stretch min-w-[15rem] max-w-full gap-2 mt-3">
+
+
+                        <div class="relative flex items-center" v-for="(option, index) in field.options"
+                            :key="option.value">
+                            <input type="radio" ref="InputFields" autofocus :id="field.name + '' + index"
+                                class="hidden peer focus:ring focus:ring-offset-0 focus:ring-blue-200 focus:ring-opacity-50"
+                                :name="field.name" v-model="field.value" :value="option" />
+                            <label :for="field.name + '' + index"
+                                class="w-full px-2 py-1 border rounded bg-neutral-50 border-neutral-200 peer-checked:bg-neutral-200 peer-checked:border-neutral-600 peer-checked:[&>.letter]:bg-neutral-400 peer-checked:[&>.letter]:text-white peer-checked:[&>.letter]:border-neutral-600">
+                                <span
+                                    class="px-2 py-px uppercase bg-white border rounded letter border-neutral-300">{{ String.fromCharCode(97 + index)  }}</span>
+                                <span class="ml-2">{{option}}</span></label>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <input v-else
                     class="w-full px-0 mt-3 text-xl font-normal border-0 border-b-2 border-neutral-400 focus:border-black focus:outline-none focus:ring-0 placeholder:text-neutral-300"
-                    type="text" placeholder="Type your answer here.." v-model="field.value"
-                    :class="{'input-error' : isInvalid}" @input="validate" />
+                    ref="InputFields" type="text" placeholder="Type your answer here.." v-model="field.value"
+                    @input="validate" />
 
             </div>
             <div v-if="isInvalid"
