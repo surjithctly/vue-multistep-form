@@ -2,7 +2,7 @@ import {
   createApp,
   nextTick,
 } from "https://unpkg.com/petite-vue?module";
-// import { transition } from "https://unpkg.com/vue-petite-transition@2.0.0/dist/vue-petite-transition.es.js";
+// import { transitionDirective } from "https://unpkg.com/vue-petite-transition?module";
 
 function FieldComponent(props) {
   return {
@@ -278,7 +278,7 @@ createApp({
     // }
   },
 })
-  // .directive("transition", transition)
+  // .directive("transition", transitionDirective)
   .mount("#multistep-form");
 
 function validateEmail(email) {
