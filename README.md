@@ -1,15 +1,14 @@
-# Tailwind CSS Starter
-
-This is a dead simple HTML Starter Template with Tailwind CSS.
+# Multistep Typeform Like Form Template
+This is a simple implementation of Working Multi-Step form using Vue, Tailwind CSS & [Web3Forms](https://web3forms).
 
 ## How to use
 
 First clone the code to your local system from github.
 
 ```bash
-git clone https://github.com/web3templates/tailwindcss-starter.git MyProjectName
+git clone https://github.com/surjithctly/vue-multistep-form.git MyProjectName
 # or (same folder)
-git clone https://github.com/web3templates/tailwindcss-starter.git .
+git clone https://github.com/surjithctly/vue-multistep-form.git .
 ```
 
 Now, Install Node dependencies by installing the following command.
